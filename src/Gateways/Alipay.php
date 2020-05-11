@@ -10,9 +10,24 @@ class Alipay extends Gateway
     const RSA_PRIVATE = 1;
     const RSA_PUBLIC  = 2;
 
-    const API_BASE            = 'https://openapi.alipay.com/gateway.do';
+    protected $API_BASE       = 'https://openapi.alipay.com/gateway.do';
     protected $AuthorizeURL   = 'https://openauth.alipay.com/oauth2/publicAppAuthorize.htm';
     protected $AccessTokenURL = 'https://openapi.alipay.com/gateway.do';
+
+    public function __construct($config = null) 
+    {
+        parent::__construct($config);
+
+        //supported alipay sandbox mode
+        if (strtolower($config['mode']) === 'dev') {
+            $domain = 'alipay.com';
+            $sandboxDomain = 'alipaydev.com';
+            str_replace($domain, $sandboxDomain, $this->API_BASE);
+            str_replace($domain, $sandboxDomain, $this->AuthorizeURL);
+            str_replace($domain, $sandboxDomain, $this->AccessTokenURL);
+        }
+    }
+
     /**
      * 得到跳转地址
      */
@@ -93,7 +108,7 @@ class Alipay extends Gateway
         $params         = array_merge($_params, $params);
         $params['sign'] = $this->signature($params);
 
-        $data = $this->$method(self::API_BASE, $params);
+        $data = $this->$method($this->API_BASE, $params);
         $data = mb_convert_encoding($data, 'utf-8', 'gbk');
         return json_decode($data, true);
     }
